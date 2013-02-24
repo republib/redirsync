@@ -1,5 +1,6 @@
-#!/usr/local/bin/python2.7
+#!/usr/local/bin/python
 # encoding: utf-8
+# Project: https://github.com/republib/republib/wiki
 # Licence: Public domain: http://www.wtfpl.net
 
 '''
@@ -145,7 +146,6 @@ class Settings:
         @param filename: the name of the configuration file
         '''
         config = Config(filename)
-        self._browser = config.get('browser')
         mode = config.get('copy.mode')
         if mode:
             if mode.find('add'):
@@ -250,6 +250,31 @@ class Sync:
             self._waitingErrors.append('home directory does not exist: ' 
                 + self._home)
 
+    def replaceVariables(self, phrase, timepoint = None):
+        '''Replaces variables in a string with its values.
+        @param phrase: the string which should be changed
+        @param timepoint: the time used by the time variables
+        @return: None: the phrase is None<br>
+                the string with replaced variables
+        '''
+        rc = phrase
+        if rc:
+            rc = rc.replace('{home}', self._home)
+            if timepoint == None:
+                timepoint = time.time()
+            now = time.localtime(timepoint)
+            rc = rc.replace('{year}', str(now[0]))
+            rc = rc.replace('{month}',  "{:02d}".format(now[1]))
+            rc = rc.replace('{dayOfMonth}',  "{:02d}".format(now[2]))
+            rc = rc.replace('{hour}', "{:02d}".format(now[3]))
+            rc = rc.replace('{minute}',  "{:02d}".format(now[4]))
+            rc = rc.replace('{second}',  "{:02d}".format(now[5]))
+            
+            rc = rc.replace('{dayOfWeek}', time.strftime("%a", now))
+            rc = rc.replace('{week}', time.strftime("%W", now))
+            rc = rc.replace('{time}', "%d" % (timepoint))
+        return rc
+
     def readMasterConfig(self, config):
         '''Reads the master configuration file.
         @param config: None or the name of the configuration file (with path)
@@ -260,7 +285,12 @@ class Sync:
             self._waitingErrors.append('Configuration file not found: ' + config)
         else:
             self._settings.readConfig(config)
+            self._browser = config.get('browser')
+            self._fnError = self.replaceVariables(config.get('log.file.error'))
+            self._fnLog = self.replaceVariables(config.get('log.file'))
 
+            if self._fnError == None:
+                self._fnError = Util.getTempFile('redirsync.error.log')
         for msg in self._waitingErrors:
             self.error(msg)
         
@@ -300,10 +330,10 @@ class Sync:
             if additional != None and error.find(additional) < 0:
                 msg += " [" + additional + ']'
         sys.stderr.write(msg )
-        if self._fpError == None:
-            self._fnError = Util.getTempFile('redirsync.error.log')
+        if self._fpError == None and self._fnError != None:
             self._fpError = open(self._fnError, "w")
-        self._fpError.write(msg)
+        if self._fpError != None:
+            self._fpError.write(msg)
         
     def addNodePatterns(self, patterns):
         '''Adds a each entry of a list to the include/exclude criteria of the node
@@ -503,6 +533,7 @@ class Sync:
         @param useLastNode: True: the last node of the source will be appended
                         to the target. source=/x/y target=/z copy target: /z/y
         '''
+        target = self.replaceVariables(target, self._startTime)
         for src in sources:
             if not src.endswith(os.sep):
                 src += os.sep
@@ -702,6 +733,10 @@ USAGE
         
         sync = Sync()
         sync._settings.getFromOpts(args)
+        if sync._settings._showHtml and (not hasattr(sync._browser, '_browser')
+                or sync._browser == None):
+            sync.error('No browser defined. I cannot execute --report')
+            exit(2)
         
         if args.verbose:
             sources = ""

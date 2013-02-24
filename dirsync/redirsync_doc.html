@@ -1,0 +1,193 @@
+<html>
+<header>
+<title>Documentation of redirsync</title>
+</header>
+<body>
+
+<h1>Command Line Usage</h1>
+
+<h2>Usage</h2>
+<pre>
+redirsync.py OPTIONS source_1 [ source_2 ... ] target
+</pre>
+<ul><li>source_x is a source directory.</li>
+<li>target is the name of the target directory. It may contain 
+	<a href="#placeholder">placeholders</a>.<br/>
+	If there is no placeholder the directory must exist.<br>
+	If there is a placeholder the node in front of the node containing the first
+	placeholder must exist.
+</li>
+</ul>
+
+<h2>Examples</h2>
+<pre>
+redirsync.py -u -a -m 99 -u /home /opt /etc /media/backup
+redirsync.py --update --add --max-depth=99 --use-last-node /home /opt /etc /media/backup_{dayOfWeek}
+</pre>
+
+<h2>Options</h2>
+<h3>Copy Modes</h3>
+<table border="1">
+<tr>
+<td>-a</td>
+<td>--add</td>
+<td>Add new files (only existing on the source</td>
+</tr>
+<tr>
+<td>-s</td>
+<td>--size</td>
+<td>Copy is done if the size of source and target is different.</td>
+</tr>
+<tr>
+<td>-u</td>
+<td>--update</td>
+<td>If a file exists on the destination and it is newer it will be copied.</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>--delete</td>
+<td>Files on the target which are not exist on the source will be deleted.</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>--use-last-node</td>
+<td>The last node of the source will added to the target.</td>
+</tr>
+</table>
+
+<h3>Search Criteria</h3>
+<table border="1">
+<tr>
+<td>-p LIST</td>
+<td>--node-patterns=LIST</td>
+<td>Only files matching this patterns will be copied. Separator:s ','</td>
+</tr>
+<tr>
+<td>-P LIST</td>
+<td>--dir-patterns=LIST</td>
+<td>Only directories matching this patterns will be processed. Separator: ','</td>
+</tr>
+<tr>
+<td>-r</td>
+<td>--report</td>
+<td>Displays a report in a browser.</td>
+</tr>
+</table>
+
+<h3>Other</h3>
+<table border="1">
+<tr>
+<td>-c FILE</td>
+<td>--config=FILE</td>
+<td>Configuration file.</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>--log-file=FILE</td>
+<td>Name of the log file. The value may contain <a href="#placeholder">placeholders</a></td>
+</tr>
+<tr>
+<td>-m DEPTH</td>
+<td>--max-depth=DEPTH</td>
+<td>Maximal depth of the directory tree.</td>
+</tr>
+<tr>
+<td>-S MODE</td>
+<td>--speed=MODE</td>
+<td>'quick' or 'save'</td>
+</tr>
+<tr>
+<td>-v</td>
+<td>--verbose</td>
+<td>Set verbosity level.</td>
+</tr>
+<tr>
+<td>-V</td>
+<td>--version</td>
+<td>the version will be displayed.</td>
+</tr>
+</table>
+
+<h1 name="placeholder">Placeholder</h1>
+<table border="1">
+<tr>
+<td>{year}</td>
+<td>The year of the program start.</td>
+</td>
+<tr>
+<td>{month}</td>
+<td>The month of the program start: 2 digits, e.g. 01</td>
+</td>
+<tr>
+<td>{dayOfMonth}</td>
+<td>The day of the program start: 2 digits, e.g. 02</td>
+</td>
+<tr>
+<td>{hour}</td>
+<td>The hour of the program start: 2 digits, e.g. 03</td>
+</td>
+<tr>
+<td>{minute}</td>
+<td>The year of the program start: 2 digits, e.g. 04</td>
+</td>
+<tr>
+<td>{second}</td>
+<td>The second of the program start: : 2 digits, e.g. 05</td>
+</td>
+<tr>
+<td>{week}</td>
+<td>The week number the program start: 2 digits, e.g. 06</td>
+</td>
+<tr>
+<td>{dayOfWeek}</td>
+<td>The name of the day of week of the program start, e.g. Sat (for saturday)</td>
+</td>
+<tr>
+<td>{time}</td>
+<td>The number of seconds after 1.1.1970 of the program start.</td>
+</td>
+<tr>
+<td>{home}</td>
+<td>The name of the home directory.</td>
+</td>
+</table>
+<h1>Configuration</h1>
+<p>The home directory will be used for searching the configuration file.
+The first existing item will define the home directory:
+<ul><li>Environment variable REDIRSYN_HOME</li>
+	<li>Environment variable HOME</li>
+	<li>An OS specific definition:
+		<ul><li>Linux: /home/&lt;login_name&gt;</li>
+			<li>Windows: c:\config</li>
+		</ul>
+	</li>
+</ul>
+</p> 
+
+<h2>Configuraton File</h2>
+<p>The master configuration file is given by the command line 
+option --config or the file .redirsync.conf in the home directory. 
+</p>
+<p>Each file .redirsync.conf in a processed directory will be 
+handled as configuration file. 
+</p>
+<h2>Example of a Configuration File</h2>
+<pre>
+browser=/usr/bin/opera
+copy.mode=add update delete
+copy.mode.removed=size
+max_depth=3
+verboseLevel=1
+log.file.error=/tmp/redirsync_err.log
+log.file=/tmp/redirsync_{year}.{month}.{dayOfTheMonth}.log
+</pre>
+
+<h1>Development</h1>
+<h2>Programming Language</h2>
+<p>This project is written in Python.</p>
+<h2>Portability</h2>
+<ul><li>The tests are done in python 2.7.3 and 3.2</li>
+	<li>The script has been tested under Linux and Windows7</li>
+</ul>
+
+</body>

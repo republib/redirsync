@@ -1,7 +1,7 @@
-
+# Project: https://github.com/republib/republib/wiki
 # Licence: Public domain: http://www.wtfpl.net
 
-import unittest, os.path, re
+import unittest, os.path, re, time
 from dirsync.redirsync import Sync, main, SearchCriteria
 from reutil.util import say
 from reutil.config import Config
@@ -176,6 +176,7 @@ excluded-files=(~|\.(bak|)$
         sync = Sync()
         sync._settings._maxFirstErrors = 2
         sync._settings._maxLastErrors = 1
+        sync._settings._browser = '/usr/bin/konqueror'
         count = sync._settings._maxFirstErrors + 3 + sync._settings._maxLastErrors
         self.log('expecting {} errors'.format(count))
         for no in xrange(count):
@@ -186,10 +187,24 @@ excluded-files=(~|\.(bak|)$
         self.assertEqual(count, sync._countErrors)
         self.assertEquals(sync._settings._maxFirstErrors, len(sync._firstErrors))
         self.assertEquals(sync._settings._maxLastErrors, len(sync._lastErrors))
-        
+     
+    def testReplaceVariables(self):
+        sync = Sync()
+        timepointTuple = (2013, 2, 9, 7, 8, 3, 0, 0, 0)
+        timepoint = time.mktime(timepointTuple)
+        self.assertEquals("2013.02.09",
+            sync.replaceVariables("{year}.{month}.{dayOfMonth}", timepoint))
+        self.assertEquals("07:08:03",
+            sync.replaceVariables("{hour}:{minute}:{second}", timepoint))
+        self.assertEquals("week_05 Sat",
+            sync.replaceVariables("week_{week} {dayOfWeek}", timepoint))
+           
     def testMain(self):
         self.removeTarget()
-        fn = self._trg + self._lastNode + os.sep + 'mustBeDeleted.dat';
+        path = self._trg + self._lastNode + os.sep
+        if not os.path.exists(path):
+            os.makedirs(path)
+        fn = path + 'mustBeDeleted.dat';
         self.mkFile(fn, 'yes')
         argv=[ # "testprog", 
               "-a",
@@ -215,7 +230,6 @@ excluded-files=(~|\.(bak|)$
               "--node-patterns", "*,-*.bak",
               "--dir-patterns", "*,-tmp,-temp,-cache",
               "--max-depth=3",
-              "--report",
               "--size",
               "--update",
               "--use-last-node",
@@ -224,7 +238,30 @@ excluded-files=(~|\.(bak|)$
               self._trg
               ]
         self.assertEquals(0, main(argv))
-        
+
+    def testMainExit(self):
+        argv=[ # "testprog", 
+              "--add",
+              "--config=" + self._configFile,
+              "--delete",
+              "--log-file=" + self._logFile,
+              "--node-patterns", "*,-*.bak",
+              "--dir-patterns", "*,-tmp,-temp,-cache",
+              "--max-depth=3",
+              "--report",
+              "--size",
+              "--update",
+              "--use-last-node",
+              "--verbose",
+              self._src,
+              self._trg
+              ]
+        try:
+            self.assertEquals(0, main(argv))
+            self.fail('report without browser')
+        except SystemExit:
+            pass
+
 class DummyArgs:
     def __init__(self, pairs):
         for pair in pairs:

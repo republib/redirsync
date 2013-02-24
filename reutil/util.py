@@ -1,3 +1,4 @@
+# Project: https://github.com/republib/republib/wiki
 # Licence: Public domain: http://www.wtfpl.net
 import sys, os, os.path
 

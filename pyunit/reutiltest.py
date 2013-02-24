@@ -1,8 +1,5 @@
-'''
-Created on 13.02.2013
-
-@author: hm
-'''
+# Project: https://github.com/republib/republib/wiki
+# Licence: Public domain: http://www.wtfpl.net
 import unittest
 
 from reutil.config import Config
